@@ -4,7 +4,7 @@
 ## Instructions for Running the Code
 - ### Step 1: Clone the Repository
 Clone the repository to your local machine using the following command:
-*git clone [Github]([https://github.com](https://github.com/danghung-Ptit/long-short-account-ratio.git))*
+*git clone [danghung-Ptit/long-short-account-ratio]([https://github.com](https://github.com/danghung-Ptit/long-short-account-ratio.git))*
 
 - ### Step 2: Set up Python 3.9 Environment in IntelliJ IDEA
   <ul>
