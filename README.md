@@ -1,36 +1,32 @@
-# long-short-account-ratio
-# Hướng dẫn sử dụng
+# Long-Short Account Ratio
+ This repository contains code for calculating the long-short account ratio.
 
-## Bước 1: Clone repository
+## Instructions for Running the Code
+- ### Step 1: Clone the Repository
+Clone the repository to your local machine using the following command:
+*git clone [Github]([https://github.com](https://github.com/danghung-Ptit/long-short-account-ratio.git))*
 
-Clone repository về máy của bạn bằng cách sử dụng lệnh sau:
+- ### Step 2: Set up Python 3.9 Environment in IntelliJ IDEA
+  <ul>
+  <li>Open IntelliJ IDEA and open the cloned project.</li>
+  <li>In IntelliJ IDEA, select "File" > "Settings" to open the settings.</li>
+  <li>In the settings, find and select "Project Interpreter".</li>
+  <li>Click on the "+" icon to add a Python environment.</li>
+  <li>Choose Python 3.9 from the list or enter the path to the installed Python 3.9 version on your machine.</li>
+  <li>Click "OK" to save the settings.</li>
+  
+  </ul>
 
-```bash
-git clone <link_repository>
-Bước 2: Setup môi trường Python 3.9 trong IntelliJ IDEA
-Mở IntelliJ IDEA và mở project đã được clone.
-
-Trong IntelliJ IDEA, chọn "File" > "Settings" để mở cài đặt.
-
-Trong cài đặt, tìm và chọn "Project Interpreter".
-
-Nhấp vào biểu tượng "+" để thêm một môi trường Python.
-
-Chọn Python 3.9 từ danh sách hoặc nhập đường dẫn tới phiên bản Python 3.9 đã được cài đặt trên máy của bạn.
-
-Nhấp "OK" để lưu cài đặt.
-
-Bước 3: Cài đặt thư viện
-Chạy lệnh sau để cài đặt các thư viện cần thiết:
-
-bash
-Copy code
+- ### Step 3: Install the Required Libraries
+Run the following command to install the necessary libraries:
+```sh
 pip install -r requirements.txt
-Bước 4: Chạy file main.py
-Chạy file main.py bằng lệnh sau:
+```
 
-bash
-Copy code
+- ### Step 4: Run the main.py File
+Run the main.py file using the following command in IntelliJ IDEA:
 python main.py
-css
-Copy code
+
+```sh
+python main.py
+```
