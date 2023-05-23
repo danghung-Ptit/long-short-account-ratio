@@ -8,6 +8,7 @@ import pytz
 from datetime import datetime
 import time
 import yaml
+from tabulate import tabulate
 
 with open("./config/config.yml", "r") as ymlfile:
 	cfg = yaml.load(ymlfile, Loader=yaml.SafeLoader)
@@ -205,10 +206,8 @@ def get_data(period_minutes, coin_name):
 
     response = requests.request("POST", url, headers=headers, data=payload)
 
-    # Lấy dữ liệu từ response
     data = response.json()["data"]
 
-    # Tạo DataFrame từ dữ liệu
     df = pd.DataFrame({
         "Timestamp": data["xAxis"],
         "Long/Short Ratio": data["series"][0]["data"],
@@ -216,7 +215,6 @@ def get_data(period_minutes, coin_name):
         "Short Account": data["series"][2]["data"]
     })
 
-    # Chuyển đổi timestamp sang múi giờ Việt Nam
     timezone = pytz.timezone("Asia/Ho_Chi_Minh")
     df["Time (Vietnam)"] = pd.to_datetime(df["Timestamp"], unit='ms').dt.tz_localize(pytz.UTC).dt.tz_convert(timezone)
 
@@ -231,46 +229,52 @@ def get_data(period_minutes, coin_name):
     first_long_account = df.loc[0, 'Long Account']
     first_short_account = df.loc[0, 'Short Account']
 
-    notification_message = ""
+    chg_percent = (df.loc[0, 'Long/Short Ratio'] - df.loc[1, 'Long/Short Ratio']) / df.loc[1, 'Long/Short Ratio']
 
-    if first_ratio > 1.5 or first_ratio < 0.75:
-        vn_timezone = pytz.timezone("Asia/Ho_Chi_Minh")
-        current_time = datetime.now(tz=vn_timezone).strftime("%Y-%m-%d %H:%M:%S")
-        notification_message = f"{current_time} *{coin_name}*: Long/Short Ratio - *{period_minutes}* minutes vượt quá ngưỡng giới hạn!\n"
-        notification_message += f"Giá trị: *{first_ratio}*\n"
-        notification_message += f"Long Account: {first_long_account}\n"
-        notification_message += f"Short Account: {first_short_account}\n"
+    data = [coin_name, first_ratio, f"{round(chg_percent*100, 2)}%", f"{first_long_account}", f"{first_short_account}"]
 
+    return data
 
-    # Trả về DataFrame
-    return notification_message
+# print(get_data(60, "ARPAUSDT"))
 
 async def send_notification(notification_message):
     telegram_bot = Bot(token=TELEGRAM_BOT_TOKEN_hungdv_bot)
     await telegram_bot.send_message(chat_id=TELEGRAM_CHAT_ID_Bot_Order_HungAI, text=notification_message, parse_mode="markdown")
 
-
-
 async def main():
-    period_minutes_list = [30, 60, 120]
-
+    period_minutes_list = [60]
+    table = []
+    tasks = []
     for coin in coin_list[:]:
         try:
             coin_name = coin['symbol']
-            tasks = []
             for period_minutes in period_minutes_list:
-                notification_message = get_data(period_minutes=period_minutes, coin_name=f"{coin_name}USDT")
-                task = asyncio.create_task(send_notification(notification_message))
-                tasks.append(task)
-            await asyncio.gather(*tasks)
+                data = get_data(period_minutes=period_minutes, coin_name=f"{coin_name}USDT")
+                first_ratio = data[1]
+                chg_percent = data[2]
+                if (first_ratio > 4 or first_ratio < 0.7) and (True): # đoạn này là điều kiện anh có thể sửa, nếu anh muốn thêm điều kiện của chg_percent thì xóa True đi rồi thêm chg_percent là được
+                    table.append(data)
         except:
             print(coin)
+
+    headers = ["Ticker", "Ratio", "Chg %", "Long", "Short"]
+    sorted_table = sorted(table, key=lambda x: x[1])
+    TABLE = tabulate(sorted_table, headers, tablefmt="pipe")
+    timezone = pytz.timezone("Asia/Ho_Chi_Minh")
+    current_time = datetime.now(tz=timezone)
+    notification_message = f"📌Thời điểm: {current_time.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+    notification_message += TABLE
+
+    await send_notification(notification_message)
+
 
 def run_main():
     asyncio.run(main())
 
-# Lên lịch chạy hàm main mỗi 1 giờ
-schedule.every(1).hours.do(run_main)
+run_main()
+
+# Lên lịch chạy hàm main mỗi 1 giờ, anh có thể sửa lại theo số phút
+schedule.every(60).minutes.do(run_main)
 
 while True:
     schedule.run_pending()
