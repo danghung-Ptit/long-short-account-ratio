@@ -3,7 +3,7 @@ telethon:
     TELEGRAM_CHAT_ID_Bot-Order-HungAI: -834818909
     #-967275815
     
-binance:
+binance: #HungDV
     YOUR_API_KEY: LQNUXsESmgo1rABAAs648ID571DGt4V28DtcC5dCh0mXs2mxWXR2SzMT31CCOwvM
     YOUR_API_SECRET: j61OnYbDCoif8ULWRLU7lpwaqTJQbITtGhD5BNKpaewWNRyhKNey6tjLQKCYfADs
     
