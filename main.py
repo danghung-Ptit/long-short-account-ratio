@@ -9,6 +9,7 @@ from datetime import datetime
 import time
 import yaml
 from tabulate import tabulate
+from binance.client import Client
 
 with open("./config/config.yml", "r") as ymlfile:
 	cfg = yaml.load(ymlfile, Loader=yaml.SafeLoader)
@@ -16,6 +17,9 @@ with open("./config/config.yml", "r") as ymlfile:
 
 TELEGRAM_BOT_TOKEN_hungdv_bot = cfg['telethon']['TELEGRAM_BOT_TOKEN_hungdv_bot']
 TELEGRAM_CHAT_ID_Bot_Order_HungAI = cfg['telethon']['TELEGRAM_CHAT_ID_Bot-Order-HungAI']
+YOUR_API_KEY = cfg['binance']['YOUR_API_KEY']
+YOUR_API_SECRET = cfg['binance']['YOUR_API_SECRET']
+
 
 
 coin_list = [{'symbol': 'BTC'},
@@ -172,6 +176,7 @@ coin_list = [{'symbol': 'BTC'},
  {'symbol': 'T'},
  {'symbol': 'DEFI'}]
 
+
 def get_data(period_minutes, coin_name):
     url = "https://www.binance.com/bapi/futures/v1/public/future/data/long-short-account-ratio"
 
@@ -235,28 +240,38 @@ def get_data(period_minutes, coin_name):
 
     return data
 
-# print(get_data(60, "ARPAUSDT"))
+
+trading_pairs = []
+
+def get_trading_pairs(api_key, api_secret):
+    global trading_pairs
+    client = Client(api_key, api_secret)
+    futures_exchange_info = client.futures_exchange_info()
+    trading_pairs = [{'symbol': info['symbol']} for info in futures_exchange_info['symbols']]
+        
 
 async def send_notification(notification_message):
     telegram_bot = Bot(token=TELEGRAM_BOT_TOKEN_hungdv_bot)
     await telegram_bot.send_message(chat_id=TELEGRAM_CHAT_ID_Bot_Order_HungAI, text=notification_message, parse_mode="markdown")
-
+    
+    
+    
 async def main():
     period_minutes_list = [60]
     table = []
     tasks = []
-    for coin in coin_list[:]:
+    for coin in trading_pairs[:]:
         try:
             coin_name = coin['symbol']
             for period_minutes in period_minutes_list:
-                data = get_data(period_minutes=period_minutes, coin_name=f"{coin_name}USDT")
+                data = get_data(period_minutes=period_minutes, coin_name=f"{coin_name}")
                 first_ratio = data[1]
                 chg_percent = data[2]
-                if (first_ratio > 4 or first_ratio < 0.7) and (True): # đoạn này là điều kiện anh có thể sửa, nếu anh muốn thêm điều kiện của chg_percent thì xóa True đi rồi thêm chg_percent là được
+                if (first_ratio > 4 or first_ratio < 0.7) and (True): # Điều kiện tùy chỉnh của bạn
                     table.append(data)
         except:
             print(coin)
-
+            
     headers = ["Ticker", "Ratio", "Chg %", "Long", "Short"]
     sorted_table = sorted(table, key=lambda x: x[1])
     TABLE = tabulate(sorted_table, headers, tablefmt="pipe")
@@ -264,16 +279,26 @@ async def main():
     current_time = datetime.now(tz=timezone)
     notification_message = f"📌Thời điểm: {current_time.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
     notification_message += TABLE
-
+    
     await send_notification(notification_message)
-
 
 def run_main():
     asyncio.run(main())
-
+    
+# Lên lịch cập nhật danh sách trading_pairs mỗi lần chạy main
+def update_trading_pairs():
+    global trading_pairs
+    trading_pairs = get_trading_pairs(api_key=YOUR_API_KEY, api_secret=YOUR_API_SECRET)
+    
+    
+# Hàm main sẽ gọi trước hàm update_trading_pairs để cập nhật danh sách trading_pairs, sau đó chạy main
+async def main_with_update():
+    update_trading_pairs()
+    await main()
+    
 run_main()
 
-# Lên lịch chạy hàm main mỗi 1 giờ, anh có thể sửa lại theo số phút
+# Lên lịch chạy hàm main_with_update mỗi 1 giờ
 schedule.every(60).minutes.do(run_main)
 
 while True:

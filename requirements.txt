@@ -4,3 +4,4 @@ schedule
 requests
 pandas
 tabulate
+python-binance
