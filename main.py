@@ -85,14 +85,11 @@ def get_data(period_minutes, coin_name):
     return data
 
 
-trading_pairs = []
-
 def get_trading_pairs(api_key, api_secret):
-    global trading_pairs
     client = Client(api_key, api_secret)
     futures_exchange_info = client.futures_exchange_info()
     trading_pairs = [{'symbol': info['symbol']} for info in futures_exchange_info['symbols']]
-        
+    return trading_pairs
 
 async def send_notification(notification_message):
     telegram_bot = Bot(token=TELEGRAM_BOT_TOKEN_hungdv_bot)
@@ -101,6 +98,7 @@ async def send_notification(notification_message):
     
     
 async def main():
+    trading_pairs = get_trading_pairs(api_key=YOUR_API_KEY, api_secret=YOUR_API_SECRET)
     period_minutes_list = [60]
     table = []
     tasks = []
@@ -111,7 +109,7 @@ async def main():
                 data = get_data(period_minutes=period_minutes, coin_name=f"{coin_name}")
                 first_ratio = data[1]
                 chg_percent = data[2]
-                if (first_ratio > 4 or first_ratio < 0.7) and (True): # Điều kiện tùy chỉnh của bạn
+                if (first_ratio > 4 or first_ratio < 0.7) or (abs(chg_percent) >= 10): # Điều kiện tùy chỉnh của bạn
                     table.append(data)
         except:
             print(coin)
@@ -128,18 +126,7 @@ async def main():
 
 def run_main():
     asyncio.run(main())
-    
-# Lên lịch cập nhật danh sách trading_pairs mỗi lần chạy main
-def update_trading_pairs():
-    global trading_pairs
-    trading_pairs = get_trading_pairs(api_key=YOUR_API_KEY, api_secret=YOUR_API_SECRET)
-    
-    
-# Hàm main sẽ gọi trước hàm update_trading_pairs để cập nhật danh sách trading_pairs, sau đó chạy main
-async def main_with_update():
-    update_trading_pairs()
-    await main()
-    
+
 run_main()
 
 # Lên lịch chạy hàm main_with_update mỗi 1 giờ
